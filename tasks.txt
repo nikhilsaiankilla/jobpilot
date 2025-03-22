@@ -1,0 +1,8 @@
+Jobpilot Navigate your job search like a pro
+
+21/03/2025
+- design and code the landing page
+- code the OAuth
+- Design the DB
+
+0289d10225f937adf7d1d5ff7bde480f6fae201f
