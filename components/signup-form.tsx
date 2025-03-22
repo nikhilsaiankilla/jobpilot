@@ -13,6 +13,7 @@ import { registerResponse } from "@/types/auth";
 import { registerWithEmail } from "@/actions/auth/auth";
 import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
+import OAuthSignupBtn from "./OAuthSignupBtn";
 
 export function SignupForm({
     className,
@@ -30,18 +31,9 @@ export function SignupForm({
         error: "",
     });
 
-    if (state?.success) return router.push('/auth/login');
-
-    const handleSocialLogin = async (provider: "google" | "github") => {
-        const { error, data } = await supabase.auth.signInWithOAuth({
-            provider,
-            options: { redirectTo: `${window.location.origin}/auth/callback` },
-        });
-
-        if (data) return console.log(data);
-
-        if (error) console.error(`Error signing in with ${provider}:`, error.message);
-    };
+    if (state?.success) {
+        return router.push('/auth/login');
+    }
 
     return (
         <div className={cn("flex flex-col gap-6", className)} {...props}>
@@ -109,29 +101,7 @@ export function SignupForm({
                             </div>
 
                             {/* Social Login Buttons */}
-                            <div className="grid grid-cols-2 gap-4">
-                                <Button
-                                    variant="outline"
-                                    type="button"
-                                    className="flex items-center justify-center gap-2 w-full bg-gray-200"
-                                    onClick={() => handleSocialLogin("google")}
-                                    aria-label="Sign up with Google"
-                                >
-                                    <Image src="/googleLogo.png" width={20} height={20} alt="Google logo" />
-                                    Google
-                                </Button>
-
-                                <Button
-                                    variant="outline"
-                                    type="button"
-                                    className="flex items-center justify-center gap-2 w-full bg-gray-200"
-                                    onClick={() => handleSocialLogin("github")}
-                                    aria-label="Sign up with GitHub"
-                                >
-                                    <Image src="/githubLogo.png" width={25} height={25} alt="GitHub logo" />
-                                    GitHub
-                                </Button>
-                            </div>
+                            <OAuthSignupBtn />
 
                             <div className="text-center text-sm">
                                 Already have an account?{" "}

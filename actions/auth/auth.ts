@@ -182,7 +182,6 @@ export const loginWithEmail = async (email: string, password: string): Promise<l
         }
 
         const { access_token } = session.session;
-        const { authId, id: userId } = user;
 
         // 3. Set HTTP-only cookies using Next.js cookies()
         const cookieOptions = {
@@ -194,8 +193,8 @@ export const loginWithEmail = async (email: string, password: string): Promise<l
         };
 
         cookieStore.set("accessToken", access_token, cookieOptions);
-        cookieStore.set("authId", authId, cookieOptions);
-        cookieStore.set("userId", userId.toString(), cookieOptions);
+        cookieStore.set("authId", user?.authId, cookieOptions);
+        cookieStore.set("userId", user?.id, cookieOptions);
 
         return {
             success: true,
@@ -216,19 +215,33 @@ export const loginWithEmail = async (email: string, password: string): Promise<l
 
 
 //logout
-// export const logout = () => {
-//     try {
+export const logout = async () => {
+    const cookieStore = await cookies();
+    const supabase = createClient();
+    try {
+        const { error } = await (await supabase).auth.signOut();
 
-//     } catch (error: unknown) {
-//         if (error instanceof Error) {
-//             console.log(error);
-//             return { error: error?.message || "Internal Server Wrong", status: 500, success: false }
-//         } else {
-//             console.log(error);
-//             return { error: "Internal Server Wrong", status: 500, success: false }
-//         }
-//     }
-// }
+        if (error) {
+            console.error("Logout Error:", error.message);
+            return { error: error.message, status: 500, success: false };
+        }
+
+        cookieStore.delete('accessToken');
+        cookieStore.delete('userId');
+        cookieStore.delete('authId');
+
+        return { message: "logout successfull", status: 200, success: true };
+
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+            console.log(error);
+            return { error: error?.message || "Internal Server Wrong", status: 500, success: false }
+        } else {
+            console.log(error);
+            return { error: "Internal Server Wrong", status: 500, success: false }
+        }
+    }
+}
 
 // //forget password 
 // export const forgetPassword = () => {
@@ -279,16 +292,45 @@ export const loginWithEmail = async (email: string, password: string): Promise<l
 //fetching user
 
 export const checkUserExist = async (email: string) => {
+    const cookieStore = await cookies();
+    const supabase = createClient();
+
     try {
         if (!email) {
             return { error: "Email is required to check the user", status: 400, success: false };
         }
 
-        const existingUser = await prisma.user.findUnique({ where: { email } });
+        const existingUser = await prisma.user.findUnique({
+            where: { email }, select: {
+                authId: true,
+                id: true
+            }
+        });
 
         if (!existingUser) {
             return { message: "User not found in DB", success: false, status: 404 };
         }
+
+        const { data, error } = await (await supabase).auth.getSession();
+
+        if (error || !data?.session) {
+            return { message: "something went wrong in supabase auth", success: false, status: 404 }
+        }
+
+        const cookieOptions = {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "strict" as "strict",
+            path: "/",
+            maxAge: 7 * 24 * 60 * 60, // 7 days in seconds
+        };
+
+        const access_token = data?.session?.access_token || "";
+
+        cookieStore.set("accessToken", access_token, cookieOptions);
+        cookieStore.set("authId", existingUser?.authId, cookieOptions);
+        cookieStore.set("userId", existingUser?.id, cookieOptions);
+
 
         return { message: "User found in DB", success: true, status: 200, user: existingUser };
     } catch (error: unknown) {

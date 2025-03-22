@@ -11,6 +11,7 @@ import { Eye, EyeClosed, Loader2 } from "lucide-react";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { loginWithEmail } from "@/actions/auth/auth";
+import OAuthSignupBtn from "./OAuthSignupBtn";
 
 export function LoginForm({
   className,
@@ -69,7 +70,7 @@ export function LoginForm({
               {/* Display Errors */}
               {errorMessage && (
                 <div className="text-red-500 text-sm text-center" aria-live="polite">
-                   {errorMessage}
+                  {errorMessage}
                 </div>
               )}
 
@@ -131,14 +132,7 @@ export function LoginForm({
               </div>
 
               {/* Social Login */}
-              <div className="grid grid-cols-2 gap-4">
-                <Button variant="outline" type="button" className="w-full bg-gray-200">
-                  <Image src="/googleLogo.png" width={20} height={20} alt="google-logo-signup-btn" />
-                </Button>
-                <Button variant="outline" type="button" className="w-full bg-gray-200">
-                  <Image src="/githubLogo.png" width={25} height={25} alt="github-logo-signup-btn" />
-                </Button>
-              </div>
+              <OAuthSignupBtn />
 
               {/* Sign Up Link */}
               <div className="text-center text-sm">

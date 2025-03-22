@@ -45,7 +45,7 @@ const OAuthCallback = () => {
             setUser(authUser);
 
             // Check if user exists in DB
-            const response = await checkUserExist(authUser.email);
+            const response = await checkUserExist(authUser?.email);
             if (response.success) {
                 router.replace("/dashboard");
                 return;
@@ -71,9 +71,6 @@ const OAuthCallback = () => {
             setError("User data not found.");
             return;
         }
-        
-        console.log(user?.provider);
-        
 
         // Extract only required fields
         const formattedUser = {
@@ -90,7 +87,6 @@ const OAuthCallback = () => {
             return;
         }
 
-        console.log("Created account with referral code:", code);
         router.push("/dashboard");
     };
 
