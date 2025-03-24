@@ -5,8 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
+import { sendOTP } from "@/actions/auth/reset-password";
+import { useRouter } from "next/navigation";
 
 const ForgotPassword = () => {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
@@ -16,11 +19,22 @@ const ForgotPassword = () => {
     setLoading(true);
     setMessage("");
 
-    // Simulate API call
-    setTimeout(() => {
-      setLoading(false);
-      setMessage("If your email is registered, you will receive an OTP.");
-    }, 2000);
+    try {
+      const response = await sendOTP(email);
+
+      if(response?.success){
+        setMessage("OTP Sent to your mail id");
+        setEmail("");
+
+        // redirecting to the verify otp page
+        router.push("/auth/verify-otp?email=" + email);
+      }else{
+        setMessage(response?.message);
+      }
+    } catch (error:unknown) {
+      console.log(error);
+    }
+    setLoading(false);
   };
 
   return (
@@ -40,7 +54,7 @@ const ForgotPassword = () => {
               onChange={(e) => setEmail(e.target.value)}
               required
             />
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button type="submit" className="w-full bg-blue-500 cursor-pointer" disabled={loading}>
               {loading ? (
                 <span className="flex items-center gap-2">
                   <Loader2 className="animate-spin" size={16} /> Sending OTP...
@@ -50,7 +64,7 @@ const ForgotPassword = () => {
               )}
             </Button>
           </form>
-          {message && <p className="mt-4 text-center text-sm text-gray-600">{message}</p>}
+          {message && <p className="mt-4 text-center text-sm text-foreground">{message}</p>}
         </CardContent>
       </Card>
     </div>

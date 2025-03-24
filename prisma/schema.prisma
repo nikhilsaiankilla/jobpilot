@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -14,32 +8,197 @@ datasource db {
 }
 
 model User {
-  id               String     @id @default(cuid())
-  authId           String     @unique
-  email            String     @unique
-  name             String
-  image            String?
-  role             UserRole   @default(REGULAR)
-  referralCode     String     @unique
-  preferences      Json?
-  provider         String
-  createdAt        DateTime   @default(now())
-  
-  referralsMade    Referral[] @relation("ReferrerRelation")
-  referralsReceived Referral[] @relation("RefereeRelation")
+  id           String   @id @default(cuid())
+  authId       String   @unique
+  email        String   @unique
+  name         String
+  image        String?
+  role         UserRole @default(REGULAR)
+  referralCode String   @unique
+  preferences  Json?
+  provider     String
+  createdAt    DateTime @default(now())
+
+  referralsMade     Referral[]       @relation("ReferrerRelation")
+  referralsReceived Referral[]       @relation("RefereeRelation")
+  JobApplication    JobApplication[]
+  Notes             Note[]
+  Resumes           Resume[]
+  CoverLetters      CoverLetter[]
+  FollowUps         FollowUp[]
 }
 
 model Referral {
-  id          String   @id @default(cuid())
-  referredBy  String   @map("referred_by")
-  referredWhom String  @map("referred_whom")
-  createdAt   DateTime @default(now())
-  
-  referrer    User     @relation("ReferrerRelation", fields: [referredBy], references: [id])
-  referee     User     @relation("RefereeRelation", fields: [referredWhom], references: [id])
+  id           String   @id @default(cuid())
+  referredBy   String   @map("referred_by")
+  referredWhom String   @map("referred_whom")
+  createdAt    DateTime @default(now())
+
+  referrer User @relation("ReferrerRelation", fields: [referredBy], references: [id])
+  referee  User @relation("RefereeRelation", fields: [referredWhom], references: [id])
+}
+
+model PasswordReset {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  otp       String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
 }
 
 enum UserRole {
   ADMIN
   REGULAR
+}
+
+model JobApplication {
+  id                String               @id @default(uuid())
+  userId            String
+  jobTitle          String
+  location          String?
+  companyId         String
+  status            JobApplicationStatus @default(NOT_YET_APPLIED)
+  appliedDate       DateTime
+  jobType           JobType              @default(FULL_TIME)
+  salary            Int?
+  currency          CurrencyType         @default(INR)
+  jobUrl            String?
+  jobId             String?
+  resumeId          String?
+  coverLetterId     String?
+  applicationSource JobSource            @default(LINKEDIN)
+  jobDescription    String?
+  noteId            String?
+  createdAt         DateTime             @default(now())
+
+  applicant   User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company     Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  Resume      Resume?      @relation(fields: [resumeId], references: [id])
+  CoverLetter CoverLetter? @relation(fields: [coverLetterId], references: [id])
+  notes       Note?        @relation(fields: [noteId], references: [id])
+
+  recruiter Recruiter[]
+  Rounds    Rounds[]
+}
+
+enum JobApplicationStatus {
+  NOT_YET_APPLIED
+  APPLIED
+  PROGRESS
+  REJECTED
+  OFFER_RECEIVED
+  OFFER_ACCEPTED
+  WITHDRAWN
+}
+
+enum JobType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+  INTERNSHIP
+}
+
+enum CurrencyType {
+  USD
+  INR
+  EUR
+  GBP
+  CAD
+  AUD
+  JPY
+  SGD
+}
+
+enum JobSource {
+  LINKEDIN
+  INDEED
+  COMPANY_SITE
+  REFERRAL
+  GLASSDOOR
+  ANGELLIST
+  MONSTER
+  OTHER
+}
+
+model Note {
+  id        String   @id @default(uuid())
+  userId    String
+  content   String
+  pinned    Boolean  @default(false)
+  color     String   @default("#FFFF00")
+  createdAt DateTime @default(now())
+
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  JobApplication JobApplication[]
+}
+
+model Company {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  website   String?
+  logoUrl   String?
+  industry  String?
+  size      String?
+  location  String?
+  createdAt DateTime @default(now())
+
+  jobApplications JobApplication[]
+}
+
+model Recruiter {
+  id               String   @id @default(uuid())
+  jobApplicationId String?
+  name             String
+  email            String?
+  phone            String?
+  linkedinProfile  String?
+  createdAt        DateTime @default(now())
+
+  JobApplication JobApplication? @relation(fields: [jobApplicationId], references: [id])
+}
+
+model FollowUp {
+  id           String   @id @default(uuid())
+  userId       String
+  followUpDate DateTime
+  status       String   @default("PENDING")
+  content      String
+  createdAt    DateTime @default(now())
+  
+  User         User     @relation(fields: [userId], references: [id])
+}
+
+model Resume {
+  id               String   @id @default(uuid())
+  userId           String
+  title            String?
+  jobApplicationId String?
+  fileUrl          String
+  createdAt        DateTime @default(now())
+
+  jobApplications JobApplication[]
+  User            User             @relation(fields: [userId], references: [id])
+}
+
+model CoverLetter {
+  id               String   @id @default(uuid())
+  userId           String
+  title            String?
+  jobApplicationId String?
+  content          String
+  createdAt        DateTime @default(now())
+
+  jobApplications JobApplication[]
+  User            User             @relation(fields: [userId], references: [id])
+}
+
+model Rounds {
+  id               String    @id @default(uuid())
+  jobApplicationId String
+  roundNumber      Int
+  roundType        String
+  roundDate        DateTime?
+  isCompleted      Boolean   @default(false)
+
+  jobApplication JobApplication @relation(fields: [jobApplicationId], references: [id])
 }

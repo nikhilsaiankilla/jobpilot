@@ -243,54 +243,7 @@ export const logout = async () => {
     }
 }
 
-// //forget password 
-// export const forgetPassword = () => {
-//     try {
-
-//     } catch (error: unknown) {
-//         if (error instanceof Error) {
-//             console.log(error);
-//             return { error: error?.message || "Internal Server Wrong", status: 500, success: false }
-//         } else {
-//             console.log(error);
-//             return { error: "Internal Server Wrong", status: 500, success: false }
-//         }
-//     }
-// }
-
-// // reset password 
-// export const resetPassword = () => {
-//     try {
-
-//     } catch (error: unknown) {
-//         if (error instanceof Error) {
-//             console.log(error);
-//             return { error: error?.message || "Internal Server Wrong", status: 500, success: false }
-//         } else {
-//             console.log(error);
-//             return { error: "Internal Server Wrong", status: 500, success: false }
-//         }
-//     }
-// }
-
-// //verify otp
-// export const verifyOtp = async (otp: string) => {
-//     try {
-//         // Your logic here
-//     } catch (error: unknown) {
-//         if (error instanceof Error) {
-//             console.log(error);
-//             return { error: error.message || "Internal Server Error", status: 500, success: false };
-//         } else {
-//             console.log(error);
-//             return { error: "Internal Server Error", status: 500, success: false };
-//         }
-//     }
-// };
-
-
 //fetching user
-
 export const checkUserExist = async (email: string) => {
     const cookieStore = await cookies();
     const supabase = createClient();

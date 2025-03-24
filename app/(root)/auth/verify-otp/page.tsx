@@ -1,14 +1,20 @@
 "use client";
+import { verifyOTPAction } from "@/actions/auth/reset-password";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useRef } from "react";
 
 const Page = () => {
     const [otp, setOtp] = useState(["", "", "", "", "", ""]);
     const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const [isLoading, setIsLoading] = useState(false);
+
+    const email = searchParams.get("email");
 
     const handleChange = (index: number, value: string) => {
         if (/^\d?$/.test(value)) { // Only allow a single digit
@@ -29,9 +35,27 @@ const Page = () => {
         }
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        router.push("/auth/reset-password");
+        setIsLoading(true);
+
+        if (email) {
+            const response = await verifyOTPAction(email, otp.join(""));
+
+            if (response?.success) {
+                setIsLoading(false);
+
+                // redirecting to the reset password page
+                router.push("/auth/reset-password?email=" + email);
+            } else {
+                setIsLoading(false);
+                console.log(response?.message);
+            }
+        } else {
+            setIsLoading(false);
+            console.log("Email not found");
+        }
+        setIsLoading(false);
     };
 
     return (
@@ -63,7 +87,7 @@ const Page = () => {
                                 />
                             ))}
                         </div>
-                        <Button type="submit">Verify OTP</Button>
+                        <Button type="submit" className="bg-blue-500 cursor-pointer">{isLoading ? <><Loader2 size={16} className="animate-spin"/> Verifying OTP</> : "Verify OTP"}</Button>
                     </form>
                 </CardContent>
             </Card>

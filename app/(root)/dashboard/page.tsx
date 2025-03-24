@@ -1,29 +1,20 @@
-"use client";
+import { ChartAreaInteractive } from '@/components/chart-area-interactive'
+import { DataTable } from '@/components/data-table'
+import { SectionCards } from '@/components/section-cards'
+import React from 'react'
 
-import { useRouter } from 'next/navigation';
-import React from 'react';
-import { logout } from '@/actions/auth/auth';
+import data from "./data.json"
 
-const Page = () => {
-  const router = useRouter();
-
-  const handleLogout = async () => {
-    const { success } = await logout();
-    
-    if(success){
-      router.push('/');
-    }else{
-      console.log('something went wrong');
-    }
-  };
-
+const page = () => {
   return (
-    <div>
-      <button onClick={handleLogout} className='cursor-pointer bg-red-500 text-white px-4 py-2 rounded'>
-        Logout
-      </button>
+    <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
+      <SectionCards />
+      <div className="px-4 lg:px-6">
+        <ChartAreaInteractive />
+      </div>
+      <DataTable data={data} />
     </div>
-  );
-};
+  )
+}
 
-export default Page;
+export default page
