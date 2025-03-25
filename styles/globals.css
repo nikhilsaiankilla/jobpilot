@@ -1,6 +1,17 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+html {
+  overflow: auto; /* Scroll undali */
+  -ms-overflow-style: none; /* IE, Edge lo hide cheyyadaniki */
+  scrollbar-width: none; /* Firefox lo hide cheyyadaniki */
+}
+
+html::-webkit-scrollbar {
+  display: none; /* Chrome, Safari lo hide cheyyadaniki */
+}
+
+
 @custom-variant dark (&:is(.dark *));
 
 :root {

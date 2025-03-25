@@ -4,7 +4,6 @@ export type registerResponse = {
     message?: string;
     status: number;
     success: boolean;
-
     errors?: { error: string }[];
 }
 

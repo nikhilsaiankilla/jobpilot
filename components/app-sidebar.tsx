@@ -3,6 +3,7 @@
 import * as React from "react"
 import {
   IconBookmark,
+  IconBriefcase,
   IconCamera,
   IconChartBar,
   IconClock,
@@ -54,12 +55,12 @@ const data = {
     },
     {
       title: "Applications",
-      url: "#",
+      url: "/dashboard/applications",
       icon: IconListDetails,
     },
     {
       title: "Analytics",
-      url: "#",
+      url: "/dashboard/analytics",
       icon: IconChartBar,
     },
     {
@@ -68,38 +69,43 @@ const data = {
       icon: IconPlus,
     },
     {
+      title: "Job Postings",
+      url : "/dashboard/job-postings",
+      icon : IconBriefcase
+    },
+    {
       title: "Saved Jobs",
-      url: "#",
+      url: "/dashboard/saved-jobs",
       icon: IconBookmark,
     },
     {
       title: "Resume & Cover Letters",
-      url: "#",
+      url: "/dashboard/resume-and-coverletters",
       icon: IconFileText,
     },
     {
       title: "Reminders & Follow-Ups",
-      url: "#",
+      url: "/dashboard/reminders",
       icon: IconClock,
     },
     {
       title: "Notes",
-      url: "#",
+      url: "/dashboard/notes",
       icon: IconNote,
     },
     {
       title: "Recruiters",
-      url: "#",
+      url: "/dashboard/recruiters",
       icon: IconUsers,
     },
     {
       title: "Referral Program",
-      url: "#",
+      url: "/dashboard/referral",
       icon: IconGift,
     },
     {
       title: "Subscription & AI Credits",
-      url: "#",
+      url: "/dashboard/subscription",
       icon: IconDiamond,
     },
   ],
