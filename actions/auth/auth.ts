@@ -91,7 +91,7 @@ export const registerWithEmail = async (_prevState: registerResponse, formData: 
 
 export const registerWithOAuth = async (user: any, referralCode: string | null) => {
     try {
-        if (!user || !user.email) {
+        if (!user || !user?.email) {
             return { error: "Invalid user data", status: 400, success: false };
         }
 

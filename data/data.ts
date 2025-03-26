@@ -28,3 +28,46 @@ export const features: FeatureType[] = [
         icon: Briefcase,
     },
 ];
+
+export const companies: { name: string, logo: string }[] = [
+    {
+        name: "Google",
+        logo: "/googleLogo.png",
+    },
+    {
+        name: "Microsoft",
+        logo: "/googleLogo.png",
+    },
+    {
+        name: "Amazon",
+        logo: "/googleLogo.png",
+    },
+    {
+        name: "Apple",
+        logo: "/googleLogo.png",
+    },
+    {
+        name: "Facebook",
+        logo: "/googleLogo.png",
+    },
+    {
+        name: "Netflix",
+        logo: "/googleLogo.png",
+    },
+    {
+        name: "Tesla",
+        logo: "/googleLogo.png",
+    },
+    {
+        name: "LinkedIn",
+        logo: "/googleLogo.png",
+    },
+    {
+        name: "Adobe",
+        logo: "/googleLogo.png",
+    },
+    {
+        name: "Spotify",
+        logo: "/googleLogo.png",
+    },
+];

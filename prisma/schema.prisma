@@ -134,7 +134,7 @@ model Note {
 
 model Company {
   id        String   @id @default(uuid())
-  name      String   @unique
+  name      String   
   website   String?
   logoUrl   String?
   industry  String?

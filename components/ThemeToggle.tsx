@@ -1,35 +1,34 @@
 "use client";
-import { useState, useEffect } from "react";
+
 import { Moon, Sun } from "lucide-react";
 import { motion } from "framer-motion";
+import { useTheme } from "next-themes";
 
 const ThemeToggle = () => {
-  const [theme, setTheme] = useState(() =>
-    typeof window !== "undefined" && localStorage.getItem("theme") === "dark"
-      ? "dark"
-      : "light"
-  );
+  const { theme, setTheme } = useTheme();
 
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      document.documentElement.classList.toggle("dark", theme === "dark");
-      localStorage.setItem("theme", theme);
-    }
-  }, [theme]);
+  const toggleTheme = () => {
+    setTheme((theme) => (theme === "light" ? "dark" : "light"));
+
+    console.log(theme);
+  };
 
   return (
     <button
-      onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-      className="relative w-14 h-7 flex items-center bg-gray-300 dark:bg-gray-700 rounded-full p-1 transition-all duration-300"
+      onClick={toggleTheme}
+      className="relative w-14 h-7 flex items-center bg-secondary rounded-full p-1 transition-all duration-300 shadow-lg cursor-pointer"
       aria-label="Toggle theme"
     >
-      {/* Animated Ball */}
       <motion.div
-        className="w-6 h-6 bg-white dark:bg-black rounded-full flex items-center justify-center shadow-md"
-        animate={{ x: theme === "light" ? 0 : 25 }} // Move ball smoothly
+        className="w-6 h-6 bg-background rounded-full flex items-center justify-center shadow-md"
+        animate={{ x: theme === "light" ? 0 : 25 }}
         transition={{ type: "spring", stiffness: 300, damping: 20 }}
       >
-        {theme === "light" ? <Sun size={16} className="text-foreground"/> : <Moon size={16} className="text-foreground"/>}
+        {theme === "light" ? (
+          <Sun size={16} className="text-amber-500" />
+        ) : (
+          <Moon size={16} className="text-blue-300" />
+        )}
       </motion.div>
     </button>
   );
