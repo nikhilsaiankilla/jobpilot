@@ -196,10 +196,16 @@ export const loginWithEmail = async (email: string, password: string): Promise<l
         cookieStore.set("authId", user?.authId, cookieOptions);
         cookieStore.set("userId", user?.id, cookieOptions);
 
+        const existingUser = await prisma.user.findUnique({
+            where: { email },
+            select: { id: true, email: true, name: true, image: true }
+        });
+
         return {
             success: true,
             status: 200,
             message: "Login successful",
+            user: existingUser ? { ...existingUser, image: existingUser.image || undefined } : undefined
         };
 
     } catch (error: unknown) {
@@ -220,6 +226,8 @@ export const logout = async () => {
     const supabase = createClient();
     try {
         const { error } = await (await supabase).auth.signOut();
+
+        console.log('logout');
 
         if (error) {
             console.error("Logout Error:", error.message);
@@ -256,7 +264,10 @@ export const checkUserExist = async (email: string) => {
         const existingUser = await prisma.user.findUnique({
             where: { email }, select: {
                 authId: true,
-                id: true
+                id: true,
+                email: true,
+                image: true,
+                name: true
             }
         });
 

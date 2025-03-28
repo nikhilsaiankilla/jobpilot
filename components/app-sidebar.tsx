@@ -40,6 +40,8 @@ import {
 } from "@/components/ui/sidebar"
 import Image from "next/image"
 import Link from "next/link"
+import { useSelector } from "react-redux"
+import { RootState } from "@/lib/store"
 
 const data = {
   user: {
@@ -70,8 +72,8 @@ const data = {
     },
     {
       title: "Job Postings",
-      url : "/dashboard/job-postings",
-      icon : IconBriefcase
+      url: "/dashboard/job-postings",
+      icon: IconBriefcase
     },
     {
       title: "Saved Jobs",
@@ -194,6 +196,9 @@ const data = {
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+
+  const { user } = useSelector((state: RootState) => state.auth);
+
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
@@ -220,7 +225,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser user={{
+          name: user?.name || "",
+          email: user?.email || "",
+          image: user?.image || ""
+        }} />
       </SidebarFooter>
     </Sidebar>
   )

@@ -1,39 +1,139 @@
 "use client"
 
+import { motion } from "framer-motion";
+
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle
+} from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger
+} from '@/components/ui/popover'
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
-import { CalendarIcon, Check, ChevronsUpDown, Loader2 } from 'lucide-react'
-import React, { useCallback, useEffect, useState } from 'react'
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList
+} from '@/components/ui/command'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger
+} from '@/components/ui/dialog'
+
+import {
+  CalendarIcon,
+  Check,
+  ChevronsUpDown,
+  Loader2,
+  PlusIcon,
+  X
+} from 'lucide-react'
+
+import React, {
+  useActionState,
+  useCallback,
+  useEffect,
+  useState
+} from 'react'
+import Image from 'next/image'
+
 import { format } from "date-fns"
 import { cn } from '@/lib/utils'
-import Image from 'next/image'
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+
 import { debounce } from 'lodash'
 import AddCompanyForm from '@/components/add-company-form'
 import AddNotes from '@/components/add-notes'
+import { addJobApplication } from "@/actions/jobApplicationActions";
+import { useDispatch, useSelector } from "react-redux";
+import { addJobApplicationReducer } from "@/lib/slicer/jobApplicationsSlice";
+import { Company } from "@/types/type";
+import { RootState } from "@/lib/store";
+import { useRouter } from "next/navigation";
 
-interface Company {
-  id: string,
-  name: string;
-  logoUrl: string;
-}
+const JOB_BOARD_PORTALS = [
+  { value: "LINKEDIN", display: "LinkedIn" },
+  { value: "INDEED", display: "indeed" },
+  { value: "COMPANY_SITE", display: "company career site" },
+  { value: "GLASSDOOR", display: "Glassdoor" },
+  { value: "REFERRAL", display: "Referral" },
+  { value: "ANGELLIST", display: "Angel List" },
+  { value: "MONSTER", display: "Monster" },
+  { value: "OTHER", display: "others" },
+];
 
+const currencyOptions = [
+  { value: "INR", label: "INR" },
+  { value: "USD", label: "USD" },
+  { value: "EUR", label: "EUR" },
+  { value: "GBP", label: "GBP" },
+  { value: "AUD", label: "AUD" },
+  { value: "JPY", label: "JPY" },
+  { value: "SGD", label: "SGD" },
+];
+
+const applicationStatusOptions = [
+  { value: "NOT_YET_APPLIED", label: "Not Yet Applied" },
+  { value: "APPLIED", label: "Applied" },
+  { value: "PROGRESS", label: "Progress" },
+  { value: "WITHDRAWN", label: "Withdrawn" },
+  { value: "REJECTED", label: "Rejected" },
+  { value: "OFFER_RECEIVED", label: "Offer Received" },
+  { value: "OFFER_ACCEPTED", label: "Offer Accepted" }
+];
+
+const jobTypeOptions = [
+  { value: "FULL_TIME", label: "Full Time" },
+  { value: "PART_TIME", label: "Part Time" },
+  { value: "INTERNSHIP", label: "Internship" },
+  { value: "CONTRACT", label: "contract" }
+];
 
 const page = () => {
+  const router = useRouter();
+
+
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
-  const [file, setFile] = useState<File | null>(null);
-  const [selectedCompany, setSelectedCompany] = useState("");
+  const [selectedCompany, setSelectedCompany] = useState<Company>();
   const [open, setOpen] = useState(false);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
+  const [notesId, setNotesId] = useState("");
+  const [resume, setResume] = useState<File | null>(null);
+  const [coverLetter, setCoverLatter] = useState<File | null>(null);
+  const [showNotes, setShowNotes] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  const { user } = useSelector((state: RootState) => state?.auth);
+
+  const [state, formAction] = useActionState(addJobApplication, null);
+
+  const dispatch = useDispatch();
 
   // Debounced search function
   const searchCompanies = useCallback(
@@ -79,26 +179,114 @@ const page = () => {
     searchCompanies(value);
   };
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  // handling file change 
+  const handleResumeFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files?.[0]) {
-      setFile(event.target.files[0]);
+      setResume(event.target.files[0]);
     }
   };
 
-  const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    if (event.dataTransfer.files?.[0]) {
-      setFile(event.dataTransfer.files[0]);
+  const handleCoverLetterFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files?.[0]) {
+      setCoverLatter(event.target.files[0]);
     }
   };
 
-  const submitForm = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSaveNote = (noteId: string) => {
+    console.log("Saved Note:", { noteId });
+    setNotesId(noteId);
+  };
+
+  // handling form submission 
+  const submitForm = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setIsLoading(true)
+
+    const id = user?.id;
 
     const formData = new FormData(e.currentTarget);
-    formData.append('companyId',selectedCompany)
-    console.log(formData.get('companyId'));
-  }
+
+    if (id) {
+      formData.append("userId", id);
+    }
+
+    if (selectedCompany?.id) {
+      formData.append("companyId", selectedCompany.id);
+    }
+
+    if (selectedDate) {
+      formData.append("appliedDate", selectedDate.toISOString());
+    }
+
+    if (resume) {
+      formData.append("resume", resume);
+    }
+
+    if (coverLetter) {
+      formData.append("coverLetter", coverLetter);
+    }
+
+    if (notesId) {
+      formData.append('notesId', notesId);
+    }
+
+    try {
+      formAction(formData);
+
+      if (state?.success) {
+        // Reset form state after successful submission
+        setSelectedDate(undefined);
+        setSelectedCompany(undefined);
+        setSearchQuery("");
+        setResume(null);
+        setCoverLatter(null);
+
+        router.push('/dashboard/applications');
+      }
+
+    } catch (error) {
+      console.log("Error submitting form:", error);
+    }
+    finally {
+      setIsLoading(false);
+    }
+  };
+
+  //  adding the new job application in redux to make app little fast 
+  useEffect(() => {
+    console.log("State updated:", state); // Debugging log
+
+    if (state?.success) {
+      console.log("Submission successful:", state?.jobApplication);
+
+      if (state?.jobApplication) {
+        const jobApplication = state.jobApplication;
+
+        const company = {
+          id: jobApplication?.company?.id ?? undefined,
+          name: jobApplication?.company?.name ?? undefined,
+          logoUrl: jobApplication?.company?.logoUrl ?? undefined
+        };
+
+        const newJobApplication = {
+          ...jobApplication,
+          salary: jobApplication.salary ?? undefined,
+          jobUrl: jobApplication.jobUrl ?? undefined,
+          company
+        };
+
+        dispatch(addJobApplicationReducer(newJobApplication));
+      }
+
+      setSelectedDate(undefined);
+      setSelectedCompany(undefined);
+      setSearchQuery("");
+      setResume(null);
+      setCoverLatter(null);
+    }
+  }, [state]);
+
+
   return (
     <div className='w-full flex items-center flex-col bg-background min-h-screen p-6'>
       <Card className='w-full max-w-4xl mt-5 rounded-lg bg-secondary shadow-lg border border-border'>
@@ -114,7 +302,7 @@ const page = () => {
             {/* JOB TITLE  */}
             <div>
               <Label className='text-muted-foreground'>Job Title</Label>
-              <Input placeholder='Enter Job Title' className='w-full mt-2' type='text' name='title' aria-label='job-application-title' />
+              <Input placeholder='Enter Job Title' disabled={isLoading} className='w-full mt-2' type='text' name='jobTitle' aria-label='job-application-title' />
             </div>
 
             {/* COMPANIES  */}
@@ -122,9 +310,9 @@ const page = () => {
               <Label className="text-muted-foreground my-3">Company</Label>
               <Popover open={open} onOpenChange={setOpen}>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" role="combobox" aria-expanded={open} className="w-full justify-between">
+                  <Button disabled={isLoading} variant="outline" role="combobox" aria-expanded={open} className="w-full justify-between">
                     {selectedCompany
-                      ? companies.find((company) => company.name === selectedCompany)?.name
+                      ? companies.find((company) => company.name === selectedCompany?.name)?.name
                       : "Select a company..."}
                     <ChevronsUpDown className="opacity-50" />
                   </Button>
@@ -136,6 +324,7 @@ const page = () => {
                       className="h-9 w-full"
                       value={searchQuery}
                       onValueChange={handleSearchChange}
+                      disabled={isLoading}
                     />
                     <CommandList className='w-full!'>
                       <CommandEmpty>
@@ -174,18 +363,24 @@ const page = () => {
                               key={company.id}
                               value={company.name}
                               onSelect={(currentValue) => {
-                                setSelectedCompany(currentValue === selectedCompany ? "" : currentValue);
-                                setSearchQuery(currentValue === selectedCompany ? "" : currentValue);
+                                setSelectedCompany(
+                                  currentValue === selectedCompany?.name ? undefined : company
+                                );
+                                setSearchQuery(
+                                  currentValue === selectedCompany?.name ? "" : currentValue
+                                );
                                 setOpen(false);
                               }}
+                              disabled={isLoading}
                               className="flex items-center gap-3"
                             >
+
                               <Image src={company?.logoUrl} alt={company.name} width={20} height={20} />
                               {company.name}
                               <Check
                                 className={cn(
                                   "ml-auto",
-                                  selectedCompany === company.name ? "opacity-100" : "opacity-0"
+                                  selectedCompany?.name === company.name ? "opacity-100" : "opacity-0"
                                 )}
                               />
                             </CommandItem>
@@ -201,7 +396,7 @@ const page = () => {
               {/* Location Field - Helps search engines understand job location context */}
               <div>
                 {/* Label for location input, improves accessibility and SEO */}
-                <Label className='text-muted-foreground' htmlFor="job-location">
+                <Label className='text-muted-foreground' htmlFor="job-location" >
                   Location
                 </Label>
                 {/* Input for job location, includes placeholder and aria-label for accessibility */}
@@ -211,6 +406,7 @@ const page = () => {
                   className='w-full mt-2'
                   type='text'
                   name='location'
+                  disabled={isLoading}
                   aria-label='Job location input field' // Enhanced aria-label
                 />
               </div>
@@ -218,11 +414,11 @@ const page = () => {
               {/* Status Field - Indicates job application status, useful for job tracking */}
               <div>
                 {/* Label for status select, improves accessibility */}
-                <Label className='text-muted-foreground' htmlFor="job-status">
+                <Label className='text-muted-foreground' htmlFor="status">
                   Status
                 </Label>
                 {/* Select component for job status */}
-                <Select name='job-status' aria-label="Job application status">
+                <Select name='status' disabled={isLoading} aria-label="Job application status">
                   {/* Trigger button for status dropdown */}
                   <SelectTrigger
                     id="job-status" // Added id for label association
@@ -236,24 +432,16 @@ const page = () => {
                       {/* Group label for status options */}
                       <SelectLabel>Status</SelectLabel>
                       {/* Status options with meaningful values for better SEO and usability */}
-                      <SelectItem value="not-applied" className='hover:bg-secondary transition-all duration-150 ease-in'>
-                        Not Yet Applied
-                      </SelectItem>
-                      <SelectItem value="applied" className='hover:bg-secondary transition-all duration-150 ease-in'>
-                        Applied
-                      </SelectItem>
-                      <SelectItem value="in-progress" className='hover:bg-secondary transition-all duration-150 ease-in'>
-                        Progress
-                      </SelectItem>
-                      <SelectItem value="withdrawn" className='hover:bg-secondary transition-all duration-150 ease-in'>
-                        Withdrawn
-                      </SelectItem>
-                      <SelectItem value="rejected" className='hover:bg-secondary transition-all duration-150 ease-in'>
-                        Rejected
-                      </SelectItem>
-                      <SelectItem value="offer-received" className='hover:bg-secondary transition-all duration-150 ease-in'>
-                        Offer Received
-                      </SelectItem>
+                      {applicationStatusOptions.map((status) => (
+                        <SelectItem
+                          disabled={isLoading}
+                          key={status.value}
+                          value={status.value}
+                          className='hover:bg-secondary transition-all duration-150 ease-in'
+                        >
+                          {status.label}
+                        </SelectItem>
+                      ))}
                     </SelectGroup>
                   </SelectContent>
                 </Select>
@@ -270,6 +458,7 @@ const page = () => {
                   {/* Button to trigger date picker */}
                   <PopoverTrigger asChild>
                     <Button
+                      disabled={isLoading}
                       id="applied-date" // Added id for label association
                       variant="outline"
                       className={`w-full pl-3 text-left font-normal ${!selectedDate ? "text-muted-foreground" : ""}`}
@@ -303,18 +492,20 @@ const page = () => {
                 {/* Label for job type dropdown, linked for accessibility */}
                 <Label
                   className='text-muted-foreground'
-                  htmlFor="job-type-select" // Associates label with SelectTrigger
+                  htmlFor="jobType" // Associates label with SelectTrigger
                 >
                   Job Type
                 </Label>
                 {/* Dropdown for selecting job type, optimized for accessibility */}
                 <Select
-                  name='job-type'
+                  name='jobType'
+                  disabled={isLoading}
                   aria-label="Select job type for application" // Descriptive aria-label for SEO and screen readers
                 >
                   {/* Trigger button for job type dropdown, styled for usability */}
                   <SelectTrigger
-                    id="job-type-select" // Matches htmlFor from Label
+                    id="jobType" // Matches htmlFor from Label
+                    disabled={isLoading}
                     className="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input flex h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive mt-2"
                   >
                     {/* Placeholder for job type selection */}
@@ -330,30 +521,16 @@ const page = () => {
                       {/* Label for job type group, provides context */}
                       <SelectLabel>Job Type</SelectLabel>
                       {/* Job type options with SEO-friendly values */}
-                      <SelectItem
-                        value="full-time" // Lowercase, hyphenated for consistency and SEO
-                        className='hover:bg-secondary transition-all duration-150 ease-in'
-                      >
-                        Full Time
-                      </SelectItem>
-                      <SelectItem
-                        value="part-time"
-                        className='hover:bg-secondary transition-all duration-150 ease-in'
-                      >
-                        Part Time
-                      </SelectItem>
-                      <SelectItem
-                        value="internship"
-                        className='hover:bg-secondary transition-all duration-150 ease-in'
-                      >
-                        Internship
-                      </SelectItem>
-                      <SelectItem
-                        value="apprenticeship" // Corrected typo from "Appercationship"
-                        className='hover:bg-secondary transition-all duration-150 ease-in'
-                      >
-                        Apprenticeship {/* Corrected spelling */}
-                      </SelectItem>
+                      {jobTypeOptions.map((jobType) => (
+                        <SelectItem
+                          disabled={isLoading}
+                          key={jobType.value}
+                          value={jobType.value}
+                          className='hover:bg-secondary transition-all duration-150 ease-in'
+                        >
+                          {jobType.label}
+                        </SelectItem>
+                      ))}
                     </SelectGroup>
                   </SelectContent>
                 </Select>
@@ -364,7 +541,7 @@ const page = () => {
                 {/* Label for salary input and dropdown, improves accessibility */}
                 <Label
                   className='text-muted-foreground'
-                  htmlFor="salary-input" // Links to the salary input
+                  htmlFor="salary" // Links to the salary input
                 >
                   Expected Salary
                 </Label>
@@ -372,7 +549,8 @@ const page = () => {
                 <div className='flex gap-2 items-center'>
                   {/* Number input for salary amount */}
                   <Input
-                    id="salary-input" // Matches htmlFor from Label
+                    id="salary" // Matches htmlFor from Label
+                    disabled={isLoading}
                     placeholder='Enter Salary Amount' // More descriptive placeholder
                     className='w-3/5 mt-2'
                     type='number'
@@ -382,11 +560,13 @@ const page = () => {
                   {/* Dropdown for selecting currency */}
                   <Select
                     name='currency'
+                    disabled={isLoading}
                     aria-label="Select currency for expected salary" // Descriptive aria-label
                   >
                     {/* Trigger button for currency dropdown */}
                     <SelectTrigger
-                      id="currency-select" // Unique ID for currency dropdown
+                      id="currency-select"
+                      disabled={isLoading} // Unique ID for currency dropdown
                       className="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input flex h-9 w-2/5 min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive mt-2"
                     >
                       {/* Placeholder for currency selection */}
@@ -402,24 +582,16 @@ const page = () => {
                         {/* Label for currency group, corrected from "Status" */}
                         <SelectLabel>Currency</SelectLabel> {/* Fixed label to match context */}
                         {/* Currency options with meaningful values */}
-                        <SelectItem
-                          value="INR" // Updated to use actual currency codes
-                          className='hover:bg-secondary transition-all duration-150 ease-in'
-                        >
-                          INR
-                        </SelectItem>
-                        <SelectItem
-                          value="USD"
-                          className='hover:bg-secondary transition-all duration-150 ease-in'
-                        >
-                          USD
-                        </SelectItem>
-                        <SelectItem
-                          value="EUR"
-                          className='hover:bg-secondary transition-all duration-150 ease-in'
-                        >
-                          EUR
-                        </SelectItem>
+                        {currencyOptions.map((currency) => (
+                          <SelectItem
+                            disabled={isLoading}
+                            key={currency.value}
+                            value={currency.value}
+                            className='hover:bg-secondary transition-all duration-150 ease-in'
+                          >
+                            {currency.label}
+                          </SelectItem>
+                        ))}
                       </SelectGroup>
                     </SelectContent>
                   </Select>
@@ -434,8 +606,9 @@ const page = () => {
                 <Label className='text-muted-foreground'>Job Source</Label>
 
                 {/* Select component for choosing job source */}
-                <Select name='job-source' aria-label="Select Job Source">
+                <Select name='applicationSource' disabled={isLoading} aria-label="Select Job Source">
                   <SelectTrigger
+                    disabled={isLoading}
                     className="file:text-foreground placeholder:text-muted-foreground selection:bg-primary 
                    selection:text-primary-foreground dark:bg-input/30 border-input flex h-9 w-full 
                    min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs 
@@ -457,10 +630,18 @@ const page = () => {
                   >
                     <SelectGroup className='px-3 py-2'>
                       <SelectLabel>Job Source</SelectLabel>
-                      <SelectItem value="linkedin" className='hover:bg-secondary transition-all duration-150 ease-in'>LinkedIn</SelectItem>
-                      <SelectItem value="glassdoor" className='hover:bg-secondary transition-all duration-150 ease-in'>Glassdoor</SelectItem>
-                      <SelectItem value="naukri" className='hover:bg-secondary transition-all duration-150 ease-in'>Naukri</SelectItem>
-                      <SelectItem value="withdrawn" className='hover:bg-secondary transition-all duration-150 ease-in'>Withdrawn</SelectItem>
+                      {
+                        JOB_BOARD_PORTALS.map((portal, index) => (
+                          <SelectItem disabled={isLoading} key={index} value={portal?.value} className='hover:bg-secondary transition-all duration-150 ease-in flex items-center gap-2'>
+                            <Image
+                              src="https://e7.pngegg.com/pngimages/176/843/png-clipart-glassdoor-logo-service-job-salary-social-miscellaneous-text.png"
+                              alt={portal?.value}
+                              width={30}
+                              height={30}
+                            />{portal?.display}
+                          </SelectItem>
+                        ))
+                      }
                     </SelectGroup>
                   </SelectContent>
                 </Select>
@@ -471,10 +652,11 @@ const page = () => {
                 <Label className='text-muted-foreground'>Job ID</Label>
                 {/* Input field for entering job ID */}
                 <Input
+                  disabled={isLoading}
                   placeholder='Enter the Job ID'
                   className='w-full mt-2'
                   type='text'
-                  name='job-id'
+                  name='jobId'
                   aria-label='Enter Job ID'
                 />
               </div>
@@ -486,10 +668,11 @@ const page = () => {
               <Label className='text-muted-foreground'>Job Posting URL</Label>
 
               <Input
+                disabled={isLoading}
                 placeholder='Enter the Job Posting URL'
                 className='w-full mt-2'
-                type='url'  // Changed to 'url' for better validation
-                name='job-url'
+                type='text'  // Changed to 'url' for better validation
+                name='jobUrl'
                 aria-label='Enter Job Posting URL'
               />
             </div>
@@ -499,9 +682,10 @@ const page = () => {
               <Label className='text-muted-foreground'>Job Description</Label>
 
               <Textarea
+                disabled={isLoading}
                 placeholder='Enter the Job Description (Copy & Paste from job listing)'
                 className='w-full h-32 mt-2'
-                name='job-description'
+                name='jobDescription'
                 aria-label='Enter Job Description'
               />
             </div>
@@ -516,21 +700,21 @@ const page = () => {
                     "w-full mt-2 border-2 border-dashed rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer transition",
                     "border-gray-300 hover:border-gray-500"
                   )}
-                  onDrop={handleDrop}
                   onDragOver={(e) => e.preventDefault()} // Prevent default drag behavior
                   onClick={() => document.getElementById("resumeInput")?.click()} // Trigger input on click
                 >
                   <Input
+                    disabled={isLoading}
                     id="resumeInput" // Unique ID for resume upload
                     type="file"
                     className="hidden"
-                    onChange={handleFileChange}
+                    onChange={handleResumeFileChange}
                     accept=".pdf,.doc,.docx"
                     name='resume'
                   />
 
-                  {file ? (
-                    <p className="text-sm text-gray-700">{file.name}</p>
+                  {resume ? (
+                    <p className="text-sm text-gray-700">{resume.name}</p>
                   ) : (
                     <p className="text-sm text-gray-500">Drag & Drop or Click to Upload</p>
                   )}
@@ -545,35 +729,75 @@ const page = () => {
                     "w-full mt-2 border-2 border-dashed rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer transition",
                     "border-gray-300 hover:border-gray-500"
                   )}
-                  onDrop={handleDrop}
                   onDragOver={(e) => e.preventDefault()} // Prevent default drag behavior
                   onClick={() => document.getElementById("coverLetterInput")?.click()} // Trigger input on click
                 >
                   <Input
+                    disabled={isLoading}
                     id="coverLetterInput" // Unique ID for cover letter upload
                     type="file"
                     className="hidden"
-                    onChange={handleFileChange}
+                    onChange={handleCoverLetterFileChange}
                     accept=".pdf,.doc,.docx"
                     name='cover-letter'
                   />
 
-                  {file ? (
-                    <p className="text-sm text-gray-700">{file.name}</p>
+                  {coverLetter ? (
+                    <p className="text-sm text-gray-700">{coverLetter.name}</p>
                   ) : (
                     <p className="text-sm text-gray-500">Drag & Drop or Click to Upload</p>
                   )}
                 </div>
               </div>
             </div>
-
-            <AddNotes />
-
             <div className='flex justify-end gap-4'>
-              <Button variant={'outline'} className='text-muted-foreground'>Cancel</Button>
-              <Button className='bg-primary text-white'>Submit</Button>
+              <Button variant={'outline'} className='text-muted-foreground' disabled={isLoading}>
+                Cancel
+              </Button>
+              <Button className='bg-primary text-white cursor-pointer' type="submit" disabled={isLoading}>
+                {isLoading ? (
+                  <>
+                    <Loader2 size={18} className="animate-spin" />
+                    <span className="ml-2">Submitting...</span>
+                  </>
+                ) : (
+                  "Submit"
+                )}
+              </Button>
             </div>
+
           </form>
+
+          {showNotes ? (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+              className="relative p-4 border rounded-lg shadow-md mt-6"
+            >
+              <AddNotes onSave={handleSaveNote} />
+              <Button
+                disabled={isLoading}
+                variant="outline"
+                className="absolute top-2 right-2 text-sm"
+                onClick={() => setShowNotes(false)}
+              >
+                <X size={22} />
+              </Button>
+            </motion.div>
+          ) : (
+            <motion.button
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              whileHover={{ scale: 1.05 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              className="mt-4 flex items-center gap-2 bg-blue-500 text-white px-4 py-2 rounded-md shadow-md transition hover:bg-blue-600"
+              onClick={() => setShowNotes(true)}
+            >
+              <PlusIcon size={22} /> Add Notes
+            </motion.button>
+          )}
         </CardContent>
       </Card>
     </div>

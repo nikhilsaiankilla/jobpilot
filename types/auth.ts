@@ -12,4 +12,11 @@ export type loginWithEmailResponse = {
     status: number;
     message?: string;
     error?: string;
-  };
+
+    user?: {
+        id: string,
+        name: string,
+        image?: string,
+        email: string
+    }
+};

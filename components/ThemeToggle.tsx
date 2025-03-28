@@ -16,12 +16,12 @@ const ThemeToggle = () => {
   return (
     <button
       onClick={toggleTheme}
-      className="relative w-14 h-7 flex items-center bg-secondary rounded-full p-1 transition-all duration-300 shadow-lg cursor-pointer"
+      className="relative w-10 h-6 flex items-center bg-secondary rounded-full p-1 transition-all duration-300 shadow-lg cursor-pointer"
       aria-label="Toggle theme"
     >
       <motion.div
-        className="w-6 h-6 bg-background rounded-full flex items-center justify-center shadow-md"
-        animate={{ x: theme === "light" ? 0 : 25 }}
+        className="w-5 h-5 bg-background rounded-full flex items-center justify-center shadow-md"
+        animate={{ x: theme === "light" ? 0 : 12 }}
         transition={{ type: "spring", stiffness: 300, damping: 20 }}
       >
         {theme === "light" ? (

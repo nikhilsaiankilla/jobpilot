@@ -8,25 +8,28 @@ import { Input } from "@/components/ui/input";
 import { createClient } from "@/utils/supabase/client";
 import { Loader2 } from "lucide-react";
 import { checkUserExist, registerWithOAuth } from "@/actions/auth/auth";
+import { useDispatch } from "react-redux";
+import { setUser } from "@/lib/slicer/authSlicer";
 
 const OAuthCallback = () => {
     const searchParams = useSearchParams();
     const router = useRouter();
-    const [user, setUser] = useState<any | null>(null);  // Store user in state
+    const dispatch = useDispatch();
+    const supabase = createClient();
+
+    const [userGlobally, setUserGlobally] = useState<any | null>(null);
     const [referralCode, setReferralCode] = useState<string | null>(null);
     const [showDialog, setShowDialog] = useState(false);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const supabase = createClient();
 
     useEffect(() => {
+        const queryReferralCode = searchParams.get("referral") || null;
+
         const handleOAuthCallback = async () => {
             setLoading(true);
-            const queryReferralCode = searchParams.get("referral") || null;
 
-            // Fetch OAuth session
             const { data, error } = await supabase.auth.getSession();
-
             if (error || !data.session) {
                 console.error("OAuth session error:", error?.message);
                 setError("Authentication failed. Please try again.");
@@ -41,12 +44,30 @@ const OAuthCallback = () => {
                 return;
             }
 
-            // Store user globally in state
-            setUser(authUser);
+            // Store user in state
+            setUserGlobally(authUser);
 
             // Check if user exists in DB
-            const response = await checkUserExist(authUser?.email);
+            const response = await checkUserExist(authUser.email);
             if (response.success) {
+                const userId = response?.user?.id;
+                const userName = response?.user?.name;
+                const userEmail = response?.user?.email;
+
+                // Ensure all required fields are present before logging in
+                if (!userId || !userName || !userEmail) {
+                    setError("User data is incomplete. Please contact support.");
+                    return;
+                }
+
+                const user = {
+                    id: userId,
+                    name: userName,
+                    email: userEmail,
+                    image: response?.user?.image || "",
+                };
+
+                dispatch(setUser(user));
                 router.replace("/dashboard");
                 return;
             }
@@ -61,7 +82,7 @@ const OAuthCallback = () => {
         };
 
         handleOAuthCallback();
-    }, [searchParams, router]);
+    }, [router, supabase, searchParams]);
 
     const finalizeSignup = async (userData: any, code: string | null) => {
         setShowDialog(false);
@@ -72,22 +93,40 @@ const OAuthCallback = () => {
             return;
         }
 
-        // Extract only required fields
         const formattedUser = {
             id: userData.id,
             email: userData.email,
-            name: userData.user_metadata?.full_name || user.email.split("@")[0],
+            name: userData.user_metadata?.full_name || userGlobally?.email?.split("@")[0],
             image: userData.user_metadata?.avatar_url || null,
-            provider: user?.app_metadata?.provider,
+            provider: userGlobally?.app_metadata?.provider,
         };
 
-        const { success, error } = await registerWithOAuth(formattedUser, code);
-        if (!success) {
-            setError(error || "Failed to register user.");
+        const response = await registerWithOAuth(formattedUser, code);
+        if (!response?.success) {
+            setError(response?.error || "Failed to register user.");
             return;
         }
 
-        router.push("/dashboard");
+        const userId = response?.user?.id;
+        const userName = response?.user?.name;
+        const userEmail = response?.user?.email;
+
+        // Ensure all required fields are present before logging in
+        if (!userId || !userName || !userEmail) {
+            setError("User data is incomplete. Please contact support.");
+            return;
+        }
+
+        const user = {
+            id: userId,
+            name: userName,
+            email: userEmail,
+            image: response?.user?.image || "",
+        };
+
+        dispatch(setUser(user));
+        router.replace("/dashboard");
+        return;
     };
 
     return (
@@ -113,10 +152,10 @@ const OAuthCallback = () => {
                         onChange={(e) => setReferralCode(e.target.value)}
                     />
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => finalizeSignup(user, null)}>
+                        <Button variant="outline" onClick={() => finalizeSignup(userGlobally, null)}>
                             Skip
                         </Button>
-                        <Button onClick={() => finalizeSignup(user, referralCode)}>Continue</Button>
+                        <Button onClick={() => finalizeSignup(userGlobally, referralCode)}>Continue</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

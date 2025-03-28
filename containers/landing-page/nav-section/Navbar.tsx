@@ -1,13 +1,18 @@
 "use client";
 import ThemeToggle from "@/components/ThemeToggle";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { DropdownMenuLabel } from "@/components/ui/dropdown-menu";
+import { RootState } from "@/lib/store";
 import { MenuIcon, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import React, { useState } from "react";
+import { useSelector } from "react-redux";
 
 const Navbar = () => {
   const [showNav, setShowNav] = useState(false);
+  const { user } = useSelector((state: RootState) => state?.auth);
 
   return (
     <header className="w-full padding py-2 flex items-center justify-between bg-background">
@@ -44,13 +49,34 @@ const Navbar = () => {
         </Link>
       </nav>
 
-      {/* Desktop Auth Buttons */}
-      <div className="hidden md:flex gap-4 items-center">
-        <Link href="/auth/login" className="text-sm text-primary">
-          Login
-        </Link>
-        <Button className="bg-primary">Sign In</Button>
-        <ThemeToggle/>
+      <div className="flex items-center gap-2">     {
+        user
+          ?
+          <DropdownMenuLabel className="p-0 font-normal">
+            <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+              <Avatar className="h-8 w-8 rounded-lg">
+                <AvatarImage src='./logo.png' alt="user profile" />
+                <AvatarFallback className="rounded-lg">CN</AvatarFallback>
+              </Avatar>
+              <div className="grid flex-1 text-left text-sm leading-tight">
+                <span className="truncate font-medium">
+                  nikhil sai
+                </span>
+                <span className="text-muted-foreground truncate text-xs">
+                  nikhilsaiankilla@gmail.com
+                </span>
+              </div>
+            </div>
+          </DropdownMenuLabel>
+          :
+          <div className="hidden md:flex gap-4 items-center">
+            <Link href="/auth/login" className="text-sm text-primary">
+              Login
+            </Link>
+            <Button className="bg-primary">Sign In</Button>
+          </div>
+      }
+        <ThemeToggle />
       </div>
 
       {/* Mobile Navigation */}
@@ -75,14 +101,35 @@ const Navbar = () => {
           Contact
         </Link>
 
-        <div className="flex flex-col justify-center gap-4 items-center">
-          <Link href="/login" className="text-sm text-primary">
-            Login
-          </Link>
-          <Button className="bg-primary">Sign In</Button>
-        </div>
+        {
+          user
+            ?
+            <DropdownMenuLabel className="p-0 font-normal">
+              <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+                <Avatar className="h-8 w-8 rounded-lg">
+                  <AvatarImage src='./logo.png' alt="user profile" />
+                  <AvatarFallback className="rounded-lg">CN</AvatarFallback>
+                </Avatar>
+                <div className="grid flex-1 text-left text-sm leading-tight">
+                  <span className="truncate font-medium">
+                    nikhil sai
+                  </span>
+                  <span className="text-muted-foreground truncate text-xs">
+                    nikhilsaiankilla@gmail.com
+                  </span>
+                </div>
+              </div>
+            </DropdownMenuLabel>
+            :
+            <div className="flex flex-col justify-center gap-4 items-center">
+              <Link href="/login" className="text-sm text-primary">
+                Login
+              </Link>
+              <Button className="bg-primary">Sign In</Button>
+            </div>
+        }
 
-        <ThemeToggle/>
+        <ThemeToggle />
       </nav>
 
       {/* Mobile Menu Toggle */}

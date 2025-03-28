@@ -12,11 +12,16 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { loginWithEmail } from "@/actions/auth/auth";
 import OAuthSignupBtn from "./OAuthSignupBtn";
+import { useDispatch } from "react-redux";
+import { setUser } from "@/lib/slicer/authSlicer";
 
 export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
+
+  const dispatch = useDispatch();
+
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -44,6 +49,13 @@ export function LoginForm({
           return;
         }
 
+        if (result?.user) {
+          console.log(result?.user);
+
+          dispatch(setUser(result?.user));
+        } else {
+          setErrorMessage("Invalid user data received.");
+        }
         // 3. Redirect to dashboard on success
         router.push("/dashboard");
 
@@ -121,7 +133,7 @@ export function LoginForm({
 
               {/* Login Button */}
               <Button type="submit" className="w-full bg-blue-500 hover:bg-blue-600" disabled={isPending}>
-                {isPending ? <Loader2 className="animate-spin" size={18} /> : "Login"}
+                {isPending ? <><Loader2 className="animate-spin" size={18} /> Logging In...</> : "Login"}
               </Button>
 
               {/* Divider */}
