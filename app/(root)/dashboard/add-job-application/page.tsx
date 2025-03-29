@@ -393,7 +393,6 @@ const page = () => {
             </div>
 
             <div className='grid grid-cols-1 md:grid-cols-3 gap-6'>
-              {/* Location Field - Helps search engines understand job location context */}
               <div>
                 {/* Label for location input, improves accessibility and SEO */}
                 <Label className='text-muted-foreground' htmlFor="job-location" >
@@ -485,7 +484,6 @@ const page = () => {
               </div>
             </div>
 
-            {/* Grid layout for job type and salary details, responsive for mobile and desktop */}
             <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
               {/* Job Type section - Categorizes employment type for job listings */}
               <div>
@@ -750,6 +748,7 @@ const page = () => {
                 </div>
               </div>
             </div>
+            
             <div className='flex justify-end gap-4'>
               <Button variant={'outline'} className='text-muted-foreground' disabled={isLoading}>
                 Cancel

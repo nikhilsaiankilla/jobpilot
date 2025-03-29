@@ -5,8 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { RootState } from '@/lib/store';
 import { Loader2 } from 'lucide-react';
 import React, { useState } from 'react'
+import { useSelector } from 'react-redux';
 
 const colors = {
   yellow: "#FEF08A",
@@ -23,11 +25,16 @@ const Page = () => {
   const [noteContent, setNoteContent] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
+  const { user } = useSelector((state: RootState) => state?.auth);
+
   const handleSave = async () => {
     setIsLoading(true);
     if (!noteContent.trim()) return;
-    await addNotesToDb(noteContent, colors[selectedColor], "cm8k6i04y000dv3k02gif5p4w");
-    setNoteContent("");
+    if (user?.id) {
+      await addNotesToDb(noteContent, colors[selectedColor], user?.id);
+
+      setNoteContent("");
+    }
     setIsLoading(false);
   };
 
@@ -56,7 +63,7 @@ const Page = () => {
           className="w-full mt-5 p-4 rounded-lg shadow-xl"
           style={{ backgroundColor: colors[selectedColor], color: "#333", fontFamily: "cursive" }}
         >
-          <Input className='w-full px-2 py-4 h-6 bg-transparent border-none focus:ring-0 resize-none placeholder-gray-600 text-lg' placeholder='Always start with title'/>
+          <Input className='w-full px-2 py-4 h-6 bg-transparent border-none focus:ring-0 resize-none placeholder-gray-600 text-lg' placeholder='Always start with title' />
         </div>
         <div
           className="w-full mt-5 p-6 rounded-lg shadow-xl"

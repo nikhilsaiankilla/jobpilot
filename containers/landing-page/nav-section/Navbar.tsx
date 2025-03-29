@@ -7,7 +7,7 @@ import { RootState } from "@/lib/store";
 import { MenuIcon, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import React, { useState } from "react";
+import React, { use, useState } from "react";
 import { useSelector } from "react-redux";
 
 const Navbar = () => {
@@ -15,7 +15,7 @@ const Navbar = () => {
   const { user } = useSelector((state: RootState) => state?.auth);
 
   return (
-    <header className="w-full padding py-2 flex items-center justify-between bg-background">
+    <header className="w-full padding py-2 flex items-center justify-between bg-transparent">
       {/* Logo */}
       <Link href="/" aria-label="JobPilot Home">
         <Image
@@ -55,15 +55,15 @@ const Navbar = () => {
           <DropdownMenuLabel className="p-0 font-normal">
             <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
               <Avatar className="h-8 w-8 rounded-lg">
-                <AvatarImage src='./logo.png' alt="user profile" />
+                <AvatarImage src={user?.image} alt={user?.name} />
                 <AvatarFallback className="rounded-lg">CN</AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-medium">
-                  nikhil sai
+                  {user?.name}
                 </span>
                 <span className="text-muted-foreground truncate text-xs">
-                  nikhilsaiankilla@gmail.com
+                  {user?.email}
                 </span>
               </div>
             </div>
@@ -107,15 +107,15 @@ const Navbar = () => {
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
-                  <AvatarImage src='./logo.png' alt="user profile" />
+                  <AvatarImage src={user?.image} alt={user?.name} />
                   <AvatarFallback className="rounded-lg">CN</AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-medium">
-                    nikhil sai
+                    {user?.name}
                   </span>
                   <span className="text-muted-foreground truncate text-xs">
-                    nikhilsaiankilla@gmail.com
+                    {user?.email}
                   </span>
                 </div>
               </div>

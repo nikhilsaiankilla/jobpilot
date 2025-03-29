@@ -4,44 +4,21 @@ import React, { useEffect, useState } from "react";
 import { getJobApplication } from "@/actions/jobApplicationActions";
 import { DataTable } from "./data-table";
 import { columns } from "./columns";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/lib/store";
 import { setJobApplicationsReducer } from "@/lib/slicer/jobApplicationsSlice";
+import { LoadingSkeletonForDataTable } from "@/components/LoadingSkeleton";
 
-const LoadingSkeleton = () => (
-  <div className="w-full px-3 sm:px-5 md:px-10 py-5">
-    <div className="mb-4">
-      <Skeleton className="h-10 w-48 rounded-md" />
-    </div>
-    <div className="space-y-3">
-      {[...Array(5)].map((_, index) => (
-        <div key={index} className="w-full flex items-center space-x-2">
-          <div className="w-full grid grid-cols-8 gap-5">
-            <Skeleton className="h-10 w-full rounded-md" />
-            <Skeleton className="h-10 w-full rounded-md" />
-            <Skeleton className="h-10 w-full rounded-md" />
-            <Skeleton className="h-10 w-full rounded-md" />
-            <Skeleton className="h-10 w-full rounded-md" />
-            <Skeleton className="h-10 w-full rounded-md" />
-            <Skeleton className="h-10 w-full rounded-md" />
-            <Skeleton className="h-10 w-full rounded-md" />
-          </div>
-        </div>
-      ))}
-    </div>
-  </div>
-);
 
 const Page = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { user } = useSelector((state: RootState) => state.auth);
   const { applications, loading } = useSelector((state: RootState) => state.jobApplications);
-  const [fetched, setFetched] = useState(false); // Track if data has been fetched
+  const [fetched, setFetched] = useState(false);
 
   useEffect(() => {
     const fetchApplications = async () => {
-      if (!user?.id || fetched) return; // Prevent fetching if id is missing or already fetched
+      if (!user?.id || fetched) return;
 
       try {
         const applicationsData = await getJobApplication(user.id);
@@ -75,7 +52,7 @@ const Page = () => {
 
   return (
     <div className="w-full px-3 sm:px-5 md:px-10 py-5">
-      {!user?.id || loading ? <LoadingSkeleton /> : <DataTable columns={columns} data={applications} />}
+      {!user?.id || loading ? <LoadingSkeletonForDataTable /> : <DataTable columns={columns} data={applications} />}
     </div>
   );
 };

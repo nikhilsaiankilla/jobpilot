@@ -15,15 +15,15 @@ export default function Home() {
       <Navbar />
       <HeroSection />
       <FeatureSection />
-      <HowItWorksSection/>
+      <HowItWorksSection />
       <section className="w-full py-16 padding bg-background flex items-center justify-center flex-col gap-5">
         <h2 className="text-3xl text-foreground font-bold text-center">Ready to streamline your job search?</h2>
         <Button className="cursor-pointer bg-blue-500 text-white hover:bg-blue-700" role="button" aria-label="Get started for free">
-        Start Tracking for Free
+          Start Tracking for Free
         </Button>
       </section>
       <Testimonial />
-      <StatisticsSection/>
+      <StatisticsSection />
       <PricingSection />
       <AboutSection />
       <Footer />
